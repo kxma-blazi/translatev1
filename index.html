@@ -3,15 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบสแกนภาพและแปลภาษาจีน-ไทย</title>
+    <title>AI Multi-Language Scanner & Translator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col items-center py-10 px-4 font-sans">
 
-    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-6 md:p-8">
-        <h1 class="text-2xl md:text-3xl font-bold text-center text-blue-600 mb-2">🇨🇳 AI Scanner & Translator 🇹🇭</h1>
-        <p class="text-center text-gray-500 mb-8 text-sm md:text-base">ระบบสแกนรูปภาพภาษาจีน และแปลเป็นภาษาไทยอัตโนมัติ</p>
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-blue-600 mb-2">📸 AI Scanner & Translator 🚀</h1>
+        <p class="text-center text-gray-500 mb-6 text-sm md:text-base">ระบบสแกนเอกสาร/ตัวอักษร และแปลเป็นภาษาไทยอัตโนมัติ</p>
+
+        <div class="mb-5">
+            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                🌐 เลือกภาษาต้นฉบับในรูปภาพ:
+            </label>
+            <select id="langSelect" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-gray-700 font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition cursor-pointer">
+                <option value="chi_sim" data-google="zh">🇨🇳 ภาษาจีน (ตัวย่อ) - Chinese Simplified</option>
+                <option value="eng" data-google="en">🇺🇸 ภาษาอังกฤษ - English</option>
+                <option value="jpn" data-google="ja">🇯🇵 ภาษาญี่ปุ่น - Japanese</option>
+            </select>
+        </div>
 
         <div class="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer transition relative bg-gray-50 group">
             <input type="file" id="imageInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
@@ -20,32 +31,56 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p class="text-sm md:text-base font-medium text-gray-700">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวางที่นี่</p>
-                <p class="text-xs text-gray-400 mt-1">รองรับไฟล์ PNG, JPG, JPEGที่มีตัวอักษรจีน</p>
+                <p class="text-xs text-gray-400 mt-1">ระบบจะประมวลผลข้อความตามภาษาที่คุณเลือกไว้ด้านบน</p>
             </div>
-            <img id="imagePreview" class="hidden max-h-64 mx-auto rounded-lg shadow-sm" src="#" alt="Preview">
+            <img id="imagePreview" class="hidden max-h-64 mx-auto rounded-lg shadow-sm animate-fade-in" src="#" alt="Preview">
         </div>
 
         <div id="statusBox" class="hidden mt-6 p-4 bg-blue-50 rounded-xl flex items-center justify-center space-x-3">
             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-            <p id="statusText" class="text-blue-700 text-sm md:text-base font-medium">กำลังโหลดระบบ...</p>
+            <p id="statusText" class="text-blue-700 text-sm md:text-base font-medium">กำลังเริ่มต้นระบบ...</p>
         </div>
 
         <div id="resultSection" class="hidden mt-8 space-y-6">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">ข้อความภาษาจีนที่สแกนได้ (Original Chinese):</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-semibold text-gray-700">📝 ข้อความที่สแกนได้ (Original Text):</label>
+                    <button onclick="copyToClipboard('ocrResult', this)" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 border border-gray-200 active:scale-95">
+                        📋 คัดลอกข้อความ
+                    </button>
+                </div>
                 <div id="ocrResult" class="w-full bg-gray-100 p-4 rounded-xl border border-gray-200 text-gray-800 font-mono whitespace-pre-wrap min-h-[60px]"></div>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-blue-700 mb-2">คำแปลภาษาไทย (Thai Translation):</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-semibold text-blue-700">🇹🇭 คำแปลภาษาไทย (Thai Translation):</label>
+                    <button onclick="copyToClipboard('translationResult', this)" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 border border-blue-100 active:scale-95">
+                        📋 คัดลอกคำแปล
+                    </button>
+                </div>
                 <div id="translationResult" class="w-full bg-blue-50 p-4 rounded-xl border border-blue-100 text-blue-900 font-medium whitespace-pre-wrap min-h-[60px]"></div>
             </div>
         </div>
     </div>
 
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-6">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+            <h2 class="text-base md:text-lg font-bold text-gray-800 flex items-center gap-2">
+                ⏳ ประวัติการใช้งาน 10 รายการล่าสุด (เซฟในเครื่องนี้)
+            </h2>
+            <button id="clearHistoryBtn" class="text-xs text-red-500 hover:text-red-700 font-medium hover:underline">
+                ล้างประวัติทั้งหมด
+            </button>
+        </div>
+        <div id="historyList" class="space-y-3 max-h-72 overflow-y-auto pr-1 text-sm text-gray-500">
+            ไม่มีประวัติการใช้งานในขณะนี้
+        </div>
+    </div>
+
     <script>
-        // ⚠️ วาง URL เว็บแอปของ Google Apps Script ที่ก๊อปปี้มาลงในเครื่องหมายคำพูดด้านล่างนี้ครับ
-        const GOOGLE_SCRIPT_URL = "ใส่_URL_เว็บแอป_ของฝั่งคุณตรงนี้";
+        // 🔗 ผูกลิงก์ระบบ API หลักของคุณเรียบร้อย ไม่ต้องสลับแก้ใหม่ให้ยุ่งยากครับ
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMGFCH9bR2qjljtIAdsUlBUD_rLP78vgKnsc4t7wSe2Man5OW4YhID4ZH2spl9Ss8VJg/exec";
 
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
@@ -55,12 +90,23 @@
         const resultSection = document.getElementById('resultSection');
         const ocrResult = document.getElementById('ocrResult');
         const translationResult = document.getElementById('translationResult');
+        const langSelect = document.getElementById('langSelect');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        // โหดลประวัติการใช้งานมาแสดงผลเมื่อเปิดหน้าเว็บครั้งแรก
+        document.addEventListener('DOMContentLoaded', renderHistory);
 
         imageInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // แสดงรูปพรีวิว
+            // ดึงค่า Config ของภาษาที่เลือก ณ ขณะนั้น
+            const tesseractLang = langSelect.value; 
+            const googleLang = langSelect.options[langSelect.selectedIndex].getAttribute('data-google');
+            const langLabel = langSelect.options[langSelect.selectedIndex].text.split(' - ')[0];
+
+            // ทำการแสดงภาพตัวอย่างพรีวิวบนหน้าจอ
             const reader = new FileReader();
             reader.onload = function(e) {
                 imagePreview.src = e.target.result;
@@ -69,47 +115,52 @@
             }
             reader.readAsDataURL(file);
 
-            // รีเซ็ตหน้าจอผลลัพธ์เดิม
+            // รีเซ็ตการแสดงผลหน้าจอก่อนเริ่มงานใหม่
             resultSection.classList.add('hidden');
             statusBox.classList.remove('hidden');
             
             try {
-                // สเตปที่ 1: สแกนภาพด้วย Tesseract.js (ใช้โหมดภาษา chi_sim = จีนตัวย่อ)
-                statusText.innerText = "กำลังสแกนวิเคราะห์ตัวอักษรจีนจากรูปภาพ...";
+                statusText.innerText = `กำลังเชื่อมต่อเอนจิ้นสแกนตัวอักษร (${langLabel})...`;
                 
-                const ocrData = await Tesseract.recognize(file, 'chi_sim', {
+                // สเตปที่ 1: คลี่คลายสแกนภาพข้อความด้วย Tesseract.js แยกแยะภาษาตามตัวแปร Dynamic
+                const ocrData = await Tesseract.recognize(file, tesseractLang, {
                     logger: m => {
                         if(m.status === 'recognizing text') {
-                            statusText.innerText = `กำลังสแกนภาพ: ${Math.round(m.progress * 100)}%`;
+                            statusText.innerText = `กำลังประมวลผลรูปภาพ: ${Math.round(m.progress * 100)}%`;
                         }
                     }
                 });
 
-                const chineseText = ocrData.data.text;
-                ocrResult.innerText = chineseText || "ไม่พบตัวอักษรในรูปภาพ";
+                const txtResult = ocrData.data.text;
+                ocrResult.innerText = txtResult || "";
 
-                if (!chineseText || chineseText.trim() === "") {
-                    throw new Error("ระบบสแกนไม่พบตัวอักษรจีนในรูปภาพนี้ กรุณาลองเปลี่ยนรูปใหม่ครับ");
+                if (!txtResult || txtResult.trim() === "") {
+                    throw new Error("❌ ไม่พบตัวอักษรที่สามารถอ่านได้ในไฟล์ภาพนี้ กรุณาลองปรับมุมกล้องหรือเปลี่ยนรูปภาพใหม่ครับ");
                 }
 
-                // สเตปที่ 2: ส่งข้อความจีนไปแปลผ่าน Google Script API
-                statusText.innerText = "กำลังส่งข้อมูลไปแปลภาษาไทย...";
+                statusText.innerText = "กำลังแปลงพิกัดข้อมูลส่งไปแปลภาษาไทย...";
                 
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({ text: chineseText })
-                });
+                // สเตปที่ 2: รันคำสั่งยิงไปหา Google Web App พร้อมส่งพารามิเตอร์รหัสภาษาที่สอดคล้องกันไปประมวลผล
+                const targetUrl = `${GOOGLE_SCRIPT_URL}?text=${encodeURIComponent(txtResult)}&sourceLang=${googleLang}`;
+                
+                const response = await fetch(targetUrl);
+                const responseText = await response.text();
 
-                const result = await response.json();
+                // ป้องกันกรณีระบบหลังบ้านจำเวอร์ชันเก่า คืนค่าไม่ใช่รูปแบบ JSON ปีกกา
+                if (!responseText.trim().startsWith('{')) {
+                    throw new Error("❌ ระบบตรวจพบปัญหาโครงสร้างสคริปต์หลังบ้านค้างเวอร์ชันเก่า กรุณากด New Deployment ที่หลังบ้านอีกรอบครับ");
+                }
 
-                if (result.success) {
-                    translationResult.innerText = result.translatedText;
+                const finalData = JSON.parse(responseText);
+
+                if (finalData.success) {
+                    translationResult.innerText = finalData.translatedText;
                     resultSection.classList.remove('hidden');
+                    
+                    // ⏳ บันทึกข้อมูลลงฐานข้อมูลเบราว์เซอร์ภายใน (LocalStorage)
+                    saveToHistory(langLabel, txtResult, finalData.translatedText);
                 } else {
-                    throw new Error(result.error || "เกิดข้อผิดพลาดในการแปลภาษา");
+                    throw new Error(finalData.error || "เกิดข้อผิดพลาดในการประมวลผลงานแปลภาษา");
                 }
 
             } catch (error) {
@@ -119,7 +170,70 @@
                 statusBox.classList.add('hidden');
             }
         });
+
+        // 📋 ฟังก์ชันการคัดลอกข้อความลงหน่วยความจำคลิปบอร์ดแบบ Interactive
+        function copyToClipboard(elementId, btnElement) {
+            const targetText = document.getElementById(elementId).innerText;
+            if(!targetText) return;
+            
+            navigator.clipboard.writeText(targetText).then(() => {
+                const originalContent = btnElement.innerHTML;
+                btnElement.innerHTML = "✅ คัดลอกสำเร็จ!";
+                btnElement.classList.replace('text-gray-600', 'text-green-700');
+                btnElement.classList.replace('text-blue-600', 'text-green-700');
+                btnElement.classList.add('bg-green-100', 'border-green-200');
+                
+                setTimeout(() => {
+                    btnElement.innerHTML = originalContent;
+                    btnElement.classList.replace('text-green-700', elementId === 'ocrResult' ? 'text-gray-600' : 'text-blue-600');
+                    btnElement.classList.remove('bg-green-100', 'border-green-200');
+                }, 1800);
+            });
+        }
+
+        // ⏳ ฟังก์ชันควบคุมสิทธิ์บันทึกและจัดการประวัติย้อนหลัง (LocalStorage)
+        function saveToHistory(langName, srcTxt, transTxt) {
+            let logData = JSON.parse(localStorage.getItem('scan_history_logs')) || [];
+            const timestamp = new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+            
+            const itemLog = {
+                id: Date.now(),
+                time: timestamp,
+                lang: langName,
+                srcTruncated: srcTxt.length > 70 ? srcTxt.substring(0, 70) + '...' : srcTxt,
+                transTruncated: transTxt.length > 70 ? transTxt.substring(0, 70) + '...' : transTxt
+            };
+            
+            logData.unshift(itemLog); // แทรกลงบนสุดเพื่อให้เห็นอันล่าสุดก่อน
+            localStorage.setItem('scan_history_logs', JSON.stringify(logData.slice(0, 10))); // จัดเก็บสูงสุดแค่ 10 บันทึก
+            renderHistory();
+        }
+
+        function renderHistory() {
+            let logData = JSON.parse(localStorage.getItem('scan_history_logs')) || [];
+            if (logData.length === 0) {
+                historyList.innerHTML = `<p class="text-center py-4 text-gray-400 text-xs">ไม่มีบันทึกประวัติการสแกนบนเบราว์เซอร์เครื่องนี้</p>`;
+                return;
+            }
+            
+            historyList.innerHTML = logData.map(log => `
+                <div class="bg-gray-50 border border-gray-200 p-3.5 rounded-xl transition hover:bg-gray-100/60">
+                    <div class="flex justify-between items-center text-xs font-bold mb-2">
+                        <span class="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full">${log.lang}</span>
+                        <span class="text-gray-400 font-medium">⏱️ ${log.time} น.</span>
+                    </div>
+                    <p class="text-gray-700 font-mono text-xs truncate"><strong>ต้นฉบับ:</strong> ${log.srcTruncated}</p>
+                    <p class="text-blue-900 font-medium text-xs mt-1 truncate"><strong>คำแปลไทย:</strong> ${log.transTruncated}</p>
+                </div>
+            `).join('');
+        }
+
+        clearHistoryBtn.addEventListener('click', () => {
+            if(confirm('คุณต้องการเคลียร์ประวัติพิกัดการสแกนทั้งหมดออกจากระบบใช่หรือไม่?')) {
+                localStorage.removeItem('scan_history_logs');
+                renderHistory();
+            }
+        });
     </script>
 </body>
-</html>
 </html>
