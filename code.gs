@@ -1,27 +1,36 @@
+function doGet(e) {
+  return handleTranslation(e);
+}
+
 function doPost(e) {
+  return handleTranslation(e);
+}
+
+function handleTranslation(e) {
   try {
-    // รับข้อความภาษาจีนที่ส่งมาจากหน้าเว็บ
+    // ดึงค่าข้อความที่สแกนได้จาก Parameter
     var text = e.parameter.text;
+    // 🌍 ฟีเชอร์สลับภาษา: รับค่าภาษาต้นฉบับจากหน้าบ้าน (ถ้าไม่มีให้ Default เป็น 'zh' หรือจีนตัวย่อ)
+    var sourceLang = e.parameter.sourceLang || 'zh'; 
     
-    if (!text && e.postData && e.postData.contents) {
-      text = JSON.parse(e.postData.contents).text;
-    }
-
+    // ดักจับกรณีเปิดลิงก์ทดสอบตรง ๆ หรือไม่มีการส่งข้อความมา
     if (!text || text.trim() === "") {
-      return ContentService.createTextOutput(JSON.stringify({ success: false, error: "ไม่พบข้อความภาษาจีน" }))
-                           .setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ 
+        success: true, 
+        message: "ระบบหลังบ้าน (API) พร้อมใช้งานเต็มรูปแบบแล้วครับ!" 
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // สั่งแปลจาก จีน (zh) เป็น ไทย (th)
-    var translatedText = LanguageApp.translate(text, 'zh', 'th');
+    // 🌍 สั่งแปลภาษาไปยังภาษาไทย ('th') แบบ Dynamic ตามภาษาต้นฉบับที่เลือกมา
+    var translatedText = LanguageApp.translate(text, sourceLang, 'th');
     
-    // ส่งผลลัพธ์กลับไปที่หน้าเว็บ
     var response = {
       success: true,
       originalText: text,
       translatedText: translatedText
     };
     
+    // ส่งข้อมูลกลับเป็น JSON Format ที่ถูกต้องแม่นยำ
     return ContentService.createTextOutput(JSON.stringify(response))
                          .setMimeType(ContentService.MimeType.JSON);
                          
@@ -29,8 +38,4 @@ function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
                          .setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-function doGet(e) {
-  return ContentService.createTextOutput("API แปลภาษาพร้อมใช้งานแล้วครับ!");
 }
